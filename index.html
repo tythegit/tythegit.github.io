@@ -40,17 +40,27 @@
             background-color: #e0e0e0;
         }
         #central-display {
-            margin: 5vh 0;
-            font-size: 10vw;
             display: flex;
-            align-items: center;
             justify-content: center;
-            width: 50vw;
-            height: 20vh;
-            background-color: #fff;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            gap: 10px;
+            margin: 5vh 0;
+        }
+        .digit-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .digit {
+            font-size: 8vw;
+            font-weight: bold;
             text-align: center;
+            width: 30px;
+            margin: 5px 0;
+        }
+        button {
+            font-size: 4vw;
+            padding: 5px;
+            width: 30px;
         }
         #bottom-bar {
             font-size: 4vw;
@@ -63,86 +73,109 @@
         }
     </style>
 
-<script>
-    // Variables to store totals and shift data
-    let monthlyExpenses = 0;
-    let past7Shifts = [];  // Array to store past 7 shifts earnings
-    let averageShiftEarnings = 0;
-    let shiftsPerWeek = 0;
-    let dailyBudget = 0;
+    <script>
+        // Variables to store totals and shift data
+        let monthlyExpenses = 0;
+        let past7Shifts = [];  // Array to store past 7 shifts earnings
+        let averageShiftEarnings = 0;
+        let shiftsPerWeek = 0;
+        let dailyBudget = 0;
 
-    // Function to calculate shift earnings
-    function addShiftEarnings() {
-        let hoursWorked = parseFloat(prompt("Enter hours worked:", "0"));
-        let milesDriven = parseFloat(prompt("Enter miles driven:", "0"));
-        let tips = parseFloat(prompt("Enter tips earned:", "0"));
+        // Function to calculate shift earnings
+        function addShiftEarnings() {
+            let hoursWorked = parseFloat(prompt("Enter hours worked:", "0"));
+            let milesDriven = parseFloat(prompt("Enter miles driven:", "0"));
+            let tips = parseFloat(prompt("Enter tips earned:", "0"));
 
-        if (!isNaN(hoursWorked) && !isNaN(milesDriven) && !isNaN(tips)) {
-            let earnings = (hoursWorked * 5) + (milesDriven * 0.67) + tips;
-            past7Shifts.push(earnings);
-            if (past7Shifts.length > 7) {
-                past7Shifts.shift();  // Remove the oldest shift if we have more than 7
+            if (!isNaN(hoursWorked) && !isNaN(milesDriven) && !isNaN(tips)) {
+                let earnings = (hoursWorked * 5) + (milesDriven * 0.67) + tips;
+                past7Shifts.push(earnings);
+                if (past7Shifts.length > 7) {
+                    past7Shifts.shift();  // Remove the oldest shift if we have more than 7
+                }
+                updateDailyBudget();
             }
-            updateDailyBudget();
         }
-    }
 
-    // Function to calculate average shift earnings for the month
-    function calculateMonthlyAverage() {
-        averageShiftEarnings = parseFloat(prompt("Enter your average earnings per shift:", "0"));
-        shiftsPerWeek = parseFloat(prompt("Enter shifts you work per week:", "0"));
+        // Function to calculate average shift earnings for the month
+        function calculateMonthlyAverage() {
+            averageShiftEarnings = parseFloat(prompt("Enter your average earnings per shift:", "0"));
+            shiftsPerWeek = parseFloat(prompt("Enter shifts you work per week:", "0"));
 
-        if (!isNaN(averageShiftEarnings) && !isNaN(shiftsPerWeek)) {
-            let monthlyIncomeEstimate = averageShiftEarnings * shiftsPerWeek * 4;
-            dailyBudget = (monthlyIncomeEstimate - monthlyExpenses) / 30;
+            if (!isNaN(averageShiftEarnings) && !isNaN(shiftsPerWeek)) {
+                let monthlyIncomeEstimate = averageShiftEarnings * shiftsPerWeek * 4;
+                dailyBudget = (monthlyIncomeEstimate - monthlyExpenses) / 30;
+                updateDisplay();
+            }
+        }
+
+        // Function to calculate daily budget based on the last 7 shifts or monthly average
+        function updateDailyBudget() {
+            let totalShiftEarnings = past7Shifts.reduce((a, b) => a + b, 0);
+            let shiftsCount = past7Shifts.length;
+
+            if (shiftsCount === 0) {
+                // If no shifts recorded, use average shift earnings for daily budget
+                dailyBudget = averageShiftEarnings;
+            } else {
+                // Calculate the average of the last 7 shifts
+                dailyBudget = (totalShiftEarnings / shiftsCount) - ((averageShiftEarnings * 4 - monthlyExpenses) / 30);
+            }
             updateDisplay();
         }
-    }
 
-    // Function to calculate daily budget based on the last 7 shifts or monthly average
-    function updateDailyBudget() {
-        let totalShiftEarnings = past7Shifts.reduce((a, b) => a + b, 0);
-        let shiftsCount = past7Shifts.length;
-
-        if (shiftsCount === 0) {
-            // If no shifts recorded, use average shift earnings for daily budget
-            dailyBudget = averageShiftEarnings;
-        } else {
-            // Calculate the average of the last 7 shifts
-            dailyBudget = (totalShiftEarnings / shiftsCount) - ((averageShiftEarnings * 4 - monthlyExpenses) / 30);
+        // Function to add monthly expenses
+        function addMonthlyExpenses() {
+            let expense = parseFloat(prompt("Enter your monthly expense:", "0"));
+            if (!isNaN(expense)) {
+                monthlyExpenses += expense;
+                updateDailyBudget();
+            }
         }
-        updateDisplay();
-    }
 
-    // Function to add monthly expenses
-    function addMonthlyExpenses() {
-        let expense = parseFloat(prompt("Enter your monthly expense:", "0"));
-        if (!isNaN(expense)) {
-            monthlyExpenses += expense;
-            updateDailyBudget();
+        // Function to update the central display
+        function updateDisplay() {
+            const dollarPart = `${document.getElementById("digit-0").textContent}${document.getElementById("digit-1").textContent}`;
+            const centsPart = `${document.getElementById("digit-3").textContent}${document.getElementById("digit-4").textContent}`;
+            document.getElementById("central-display").dataset.value = parseFloat(`${dollarPart}.${centsPart}`);
         }
-    }
 
-    // Function to update the display
-    function updateDisplay() {
-        document.getElementById("central-display").innerHTML = `<div>$${dailyBudget.toFixed(2)}</div>`;
-    }
+        // Digit increment and decrement functions
+        function incrementDigit(index) {
+            const digitElement = document.getElementById(`digit-${index}`);
+            let currentValue = parseInt(digitElement.textContent, 10);
+            if (isNaN(currentValue)) return; // Skip if it's the decimal point
 
-    // Event listeners for buttons
-    document.addEventListener("DOMContentLoaded", function() {
-        document.querySelector(".button:first-child").addEventListener("click", addShiftEarnings);
-        document.querySelector(".button:last-child").addEventListener("click", addMonthlyExpenses);
+            currentValue = (currentValue + 1) % 10;
+            digitElement.textContent = currentValue;
+            updateDisplay();
+        }
 
-        // Add an extra button for average shift calculation
-        let avgShiftButton = document.createElement("div");
-        avgShiftButton.classList.add("button");
-        avgShiftButton.textContent = "Calculate Average Shift Earnings";
-        avgShiftButton.onclick = calculateMonthlyAverage;
-        document.getElementById("top-buttons").appendChild(avgShiftButton);
-    });
-</script>
+        function decrementDigit(index) {
+            const digitElement = document.getElementById(`digit-${index}`);
+            let currentValue = parseInt(digitElement.textContent, 10);
+            if (isNaN(currentValue)) return; // Skip if it's the decimal point
 
+            currentValue = (currentValue - 1 + 10) % 10;
+            digitElement.textContent = currentValue;
+            updateDisplay();
+        }
+
+        // Event listeners for buttons
+        document.addEventListener("DOMContentLoaded", function() {
+            document.querySelector(".button:first-child").addEventListener("click", addShiftEarnings);
+            document.querySelector(".button:last-child").addEventListener("click", addMonthlyExpenses);
+
+            // Add an extra button for average shift calculation
+            let avgShiftButton = document.createElement("div");
+            avgShiftButton.classList.add("button");
+            avgShiftButton.textContent = "Calculate Average Shift Earnings";
+            avgShiftButton.onclick = calculateMonthlyAverage;
+            document.getElementById("top-buttons").appendChild(avgShiftButton);
+        });
+    </script>
 </head>
+
 <body>
     <div id="header">Ty’s Budget</div>
 
@@ -152,7 +185,31 @@
     </div>
 
     <div id="central-display">
-        <div>$$.$$</div>
+        <div class="digit-group">
+            <button onclick="incrementDigit(0)">+</button>
+            <div id="digit-0" class="digit">0</div>
+            <button onclick="decrementDigit(0)">-</button>
+        </div>
+        <div class="digit-group">
+            <button onclick="incrementDigit(1)">+</button>
+            <div id="digit-1" class="digit">0</div>
+            <button onclick="decrementDigit(1)">-</button>
+        </div>
+        <div class="digit-group">
+            <button disabled>+</button>
+            <div id="digit-2" class="digit">.</div>
+            <button disabled>-</button>
+        </div>
+        <div class="digit-group">
+            <button onclick="incrementDigit(3)">+</button>
+            <div id="digit-3" class="digit">0</div>
+            <button onclick="decrementDigit(3)">-</button>
+        </div>
+        <div class="digit-group">
+            <button onclick="incrementDigit(4)">+</button>
+            <div id="digit-4" class="digit">0</div>
+            <button onclick="decrementDigit(4)">-</button>
+        </div>
     </div>
 
     <div id="bottom-bar">

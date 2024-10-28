@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ty's Budget</title>
+    <style>
+        /* Mobile-optimized styling */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        #header {
+            font-size: 5vw;
+            margin-top: 5vh;
+            font-weight: bold;
+            text-align: center;
+        }
+        #top-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 80vw;
+            margin: 5vh 0;
+        }
+        .button {
+            border: 1px solid #000;
+            padding: 10px;
+            flex: 1;
+            margin: 0 5px;
+            cursor: pointer;
+            font-size: 4vw;
+            text-align: center;
+            border-radius: 8px;
+            background-color: #e0e0e0;
+        }
+        #central-display {
+            margin: 5vh 0;
+            font-size: 10vw;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 50vw;
+            height: 20vh;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            text-align: center;
+        }
+        #bottom-bar {
+            font-size: 4vw;
+            margin-top: 10vh;
+            text-align: center;
+            width: 80vw;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 8px;
+        }
+    </style>
+
+<script>
+    // Variables to store totals and shift data
+    let monthlyExpenses = 0;
+    let past7Shifts = [];  // Array to store past 7 shifts earnings
+    let averageShiftEarnings = 0;
+    let shiftsPerWeek = 0;
+    let dailyBudget = 0;
+
+    // Function to calculate shift earnings
+    function addShiftEarnings() {
+        let hoursWorked = parseFloat(prompt("Enter hours worked:", "0"));
+        let milesDriven = parseFloat(prompt("Enter miles driven:", "0"));
+        let tips = parseFloat(prompt("Enter tips earned:", "0"));
+
+        if (!isNaN(hoursWorked) && !isNaN(milesDriven) && !isNaN(tips)) {
+            let earnings = (hoursWorked * 5) + (milesDriven * 0.67) + tips;
+            past7Shifts.push(earnings);
+            if (past7Shifts.length > 7) {
+                past7Shifts.shift();  // Remove the oldest shift if we have more than 7
+            }
+            updateDailyBudget();
+        }
+    }
+
+    // Function to calculate average shift earnings for the month
+    function calculateMonthlyAverage() {
+        averageShiftEarnings = parseFloat(prompt("Enter your average earnings per shift:", "0"));
+        shiftsPerWeek = parseFloat(prompt("Enter shifts you work per week:", "0"));
+
+        if (!isNaN(averageShiftEarnings) && !isNaN(shiftsPerWeek)) {
+            let monthlyIncomeEstimate = averageShiftEarnings * shiftsPerWeek * 4;
+            dailyBudget = (monthlyIncomeEstimate - monthlyExpenses) / 30;
+            updateDisplay();
+        }
+    }
+
+    // Function to calculate daily budget based on the last 7 shifts or monthly average
+    function updateDailyBudget() {
+        let totalShiftEarnings = past7Shifts.reduce((a, b) => a + b, 0);
+        let shiftsCount = past7Shifts.length;
+
+        if (shiftsCount === 0) {
+            // If no shifts recorded, use average shift earnings for daily budget
+            dailyBudget = averageShiftEarnings;
+        } else {
+            // Calculate the average of the last 7 shifts
+            dailyBudget = (totalShiftEarnings / shiftsCount) - ((averageShiftEarnings * 4 - monthlyExpenses) / 30);
+        }
+        updateDisplay();
+    }
+
+    // Function to add monthly expenses
+    function addMonthlyExpenses() {
+        let expense = parseFloat(prompt("Enter your monthly expense:", "0"));
+        if (!isNaN(expense)) {
+            monthlyExpenses += expense;
+            updateDailyBudget();
+        }
+    }
+
+    // Function to update the display
+    function updateDisplay() {
+        document.getElementById("central-display").innerHTML = `<div>$${dailyBudget.toFixed(2)}</div>`;
+    }
+
+    // Event listeners for buttons
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelector(".button:first-child").addEventListener("click", addShiftEarnings);
+        document.querySelector(".button:last-child").addEventListener("click", addMonthlyExpenses);
+
+        // Add an extra button for average shift calculation
+        let avgShiftButton = document.createElement("div");
+        avgShiftButton.classList.add("button");
+        avgShiftButton.textContent = "Calculate Average Shift Earnings";
+        avgShiftButton.onclick = calculateMonthlyAverage;
+        document.getElementById("top-buttons").appendChild(avgShiftButton);
+    });
+</script>
+
+</head>
+<body>
+    <div id="header">Ty’s Budget</div>
+
+    <div id="top-buttons">
+        <div class="button">Add Shift Earnings</div>
+        <div class="button">Add Monthly Expenses</div>
+    </div>
+
+    <div id="central-display">
+        <div>$$.$$</div>
+    </div>
+
+    <div id="bottom-bar">
+        <div>Cumulative Savings/Loss</div>
+    </div>
+</body>
+</html>
